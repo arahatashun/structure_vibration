@@ -2,20 +2,36 @@
 # -*- coding: utf-8 -*-
 # Author:Shun Arahata
 
+import matplotlib as mpl
+mpl.use("pgf")
+pgf_with_custom_preamble = {
+    "font.family": "serif", # use serif/main font for text elements
+    "text.usetex": True,    # use inline math for ticks
+    "pgf.rcfonts": False,   # don't setup fonts from rc parameters
+    "pgf.preamble": [
+         "\\usepackage{units}",         # load additional packages
+         "\\usepackage{metalogo}",
+         "\\usepackage{unicode-math}",  # unicode math setup
+         r"\setmathfont{xits-math.otf}",
+         r"\setmainfont{DejaVu Serif}", # serif font via preamble
+         ]
+}
+mpl.rcParams.update(pgf_with_custom_preamble)
 import sympy as sym
 import scipy.linalg
 # from sympy.matrices import Matrix
 from sympy import lambdify, symbols
 import numpy as np
-import matplotlib.pyplot as plt
 import itertools
+import matplotlib.pyplot as plt
+
 
 # Constant
 l = 100 * (10 ** (-3))  # m
 rho = 2.7 * (10 ** (-3)) * ((10 ** 2) ** 3)  # kg/m^3
 h = 1 * (10 ** (-3))  # m
 E = 70 * (10 ** 9)  # Pa
-
+non_dimensionize = 1 / l ** 2 * np.sqrt(E * h ** 3 / 12 * (2) ** 3 / (rho * h * 2))
 
 class beam(object):
     def __init__(self, is_tapering):
@@ -115,10 +131,11 @@ def solve_determinant(phi, beam):
     omega = np.sqrt(list(itertools.compress(eig_val, selectors)))
     eig_vec = list(itertools.compress(eig_vec, selectors))
     omega, eig_vec = (list(t) for t in zip(*sorted(zip(omega, eig_vec))))
+    print("omega", omega/non_dimensionize)
     return eig_vec
 
 
-def make_plot(eq_list):
+def make_plot(eq_list,title):
     """make matplotlib figure
 
     :param eq_list: list of sympy equation
@@ -135,7 +152,9 @@ def make_plot(eq_list):
         max_y = abs(y_vals).max()
         ax.plot(x_vals, y_vals / max_y, label='mode:' + str(i + 1))
     ax.legend()
-    plt.show()
+    name = title +".pgf"
+    print(name)
+    plt.savefig(name)
 
 
 def main(n, is_tapering):
@@ -149,7 +168,8 @@ def main(n, is_tapering):
     phi = make_phi_array(largest_order)
     c = solve_determinant(phi, beam(is_tapering))
     w_list = [sum([c[j][i] * phi[i] for i in range(len(phi))]) for j in range(len(c))]
-    make_plot(w_list)
+    title = str(n) +str(inp)
+    make_plot(w_list,title)
 
 
 if __name__ == '__main__':
