@@ -2,21 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author:Shun Arahata
 
-import matplotlib as mpl
-mpl.use("pgf")
-pgf_with_custom_preamble = {
-    "font.family": "serif", # use serif/main font for text elements
-    "text.usetex": True,    # use inline math for ticks
-    "pgf.rcfonts": False,   # don't setup fonts from rc parameters
-    "pgf.preamble": [
-         "\\usepackage{units}",         # load additional packages
-         "\\usepackage{metalogo}",
-         "\\usepackage{unicode-math}",  # unicode math setup
-         r"\setmathfont{xits-math.otf}",
-         r"\setmainfont{DejaVu Serif}", # serif font via preamble
-         ]
-}
-mpl.rcParams.update(pgf_with_custom_preamble)
+
 import sympy as sym
 import scipy.linalg
 # from sympy.matrices import Matrix
@@ -25,15 +11,16 @@ import numpy as np
 import itertools
 import matplotlib.pyplot as plt
 
-
 # Constant
 l = 100 * (10 ** (-3))  # m
 rho = 2.7 * (10 ** (-3)) * ((10 ** 2) ** 3)  # kg/m^3
 h = 1 * (10 ** (-3))  # m
 E = 70 * (10 ** 9)  # Pa
 non_dimensionize = 1 / l ** 2 * np.sqrt(E * h ** 3 / 12 * (2) ** 3 / (rho * h * 2))
+kls = [4.730, 7.8532, 10.9956, 14.1371, 17.2787]
 
-class beam(object):
+
+class Beam(object):
     def __init__(self, is_tapering):
         if (is_tapering):
             print("tapering")
@@ -79,7 +66,7 @@ class beam(object):
         return m
 
 
-def make_phi(largest_order):
+def make_phi_x(largest_order):
     """
     calcutate phi.
     :param largest_order:the number of largest order
@@ -109,19 +96,19 @@ def make_phi_array(largest_order):
     x = symbols('x')
     phi_array = [1, x / l]
     for i in range(6, largest_order + 1):
-        phi_array.append(make_phi(i))
+        phi_array.append(make_phi_x(i))
 
     return phi_array
 
 
-def solve_determinant(phi, beam):
+def solve_determinant(phi, Beam):
     """solve determinant
 
     :param phi:phi array
     :return eig_vec: c array
     """
-    k = np.array(beam.make_k_matrix(phi))
-    m = np.array(beam.make_m_matrix(phi))
+    k = np.array(Beam.make_k_matrix(phi))
+    m = np.array(Beam.make_m_matrix(phi))
     eig_val, eig_vec = scipy.linalg.eig(k, m)  # 一般固化有値問題を解く
 
     for i in range(len(eig_vec)):  # 正規化
@@ -131,14 +118,15 @@ def solve_determinant(phi, beam):
     omega = np.sqrt(list(itertools.compress(eig_val, selectors)))
     eig_vec = list(itertools.compress(eig_vec, selectors))
     omega, eig_vec = (list(t) for t in zip(*sorted(zip(omega, eig_vec))))
-    print("omega", omega/non_dimensionize)
+    print("omega", omega / non_dimensionize)
     return eig_vec
 
 
-def make_plot(eq_list,title):
+def make_plot(eq_list, title):
     """make matplotlib figure
 
     :param eq_list: list of sympy equation
+    :param title: title of fig
     :return:
     """
     fig, ax = plt.subplots()
@@ -149,11 +137,11 @@ def make_plot(eq_list,title):
     for i in range(len(eq_list)):
         lam_w_i = lambdify(x, eq_list[i], modules=['numpy'])
         y_vals = lam_w_i(x_vals)
-        max_y = abs(y_vals).max()
-        ax.plot(x_vals, y_vals / max_y, label='mode:' + str(i + 1))
+        min_y = - y_vals[0]
+        ax.plot(x_vals, y_vals / min_y, label='mode:' + str(i + 1))
     ax.legend()
-    name = title +".pgf"
-    print(name)
+    name = "fig/" + title + ".pgf"
+    # plt.show()
     plt.savefig(name)
 
 
@@ -166,15 +154,14 @@ def main(n, is_tapering):
     """
     largest_order = n + 3
     phi = make_phi_array(largest_order)
-    c = solve_determinant(phi, beam(is_tapering))
+    c = solve_determinant(phi, Beam(is_tapering))
     w_list = [sum([c[j][i] * phi[i] for i in range(len(phi))]) for j in range(len(c))]
-    title = str(n) +str(inp)
-    make_plot(w_list,title)
+    title = str(n) + str(inp)
+    make_plot(w_list, title)
 
 
 if __name__ == '__main__':
-    n = int(input("number of omega "))
-    print("Is the beam tapering?")
+    print("Is the Beam tapering?")
     dic = {'y': True, 'yes': True, 'n': False, 'no': False}
     while True:
         try:
@@ -183,4 +170,15 @@ if __name__ == '__main__':
         except:
             pass
         print('Error! Input again.')
-    main(n, inp)
+    print("Phi is polynomial expression　of x ?")
+    while True:
+        try:
+            exp = dic[input('[Y]es/[N]o? >> ').lower()]
+            break
+        except:
+            pass
+        print('Error! Input again.')
+
+    if(exp):
+        n = int(input("number of phi "))
+        main(n, inp)
