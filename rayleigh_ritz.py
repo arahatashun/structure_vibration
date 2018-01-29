@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Author:Shun Arahata
+""" Numerical Analysis of free-free beam.
 
+This module numerically analyze free-free beam vibration
+using Rayleigh-Ritz method.
+
+"""
 
 import sympy as sym
 import scipy.linalg
@@ -180,8 +185,8 @@ def make_plot(eq_list, title):
         ax.plot(x_vals, y_vals / min_y, label='mode:' + str(i + 1))
     ax.legend()
     name = "fig/" + title + ".pgf"
-    # plt.show()
-    plt.savefig(name)
+    plt.show()
+    # plt.savefig(name)
 
 
 def main(n, is_tapering, is_x):
