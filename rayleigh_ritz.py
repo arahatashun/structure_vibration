@@ -12,6 +12,7 @@ import itertools
 import matplotlib.pyplot as plt
 from scipy.integrate import quad
 import scipy as sp
+
 # Constant
 l = 100 * (10 ** (-3))  # m
 rho = 2.7 * (10 ** (-3)) * ((10 ** 2) ** 3)  # kg/m^3
@@ -40,11 +41,11 @@ class Beam(object):
         ddphi_j = sym.diff(dphi_j, x)
         function = self.EI(x) * ddphi_i * ddphi_j
         expr = sym.expand(function)
-        evalstr = "lambda x:"+str(expr)
-        evalstr = evalstr.replace("cos","sp.cos")
-        evalstr = evalstr.replace("sin","sp.sin")
+        evalstr = "lambda x:" + str(expr)
+        evalstr = evalstr.replace("cos", "sp.cos")
+        evalstr = evalstr.replace("sin", "sp.sin")
         f = eval(evalstr)
-        k_ij = quad(f,0,l)[0]
+        k_ij = quad(f, 0, l)[0]
         return float(k_ij)
 
     def make_k_matrix(self, phi):
@@ -65,7 +66,7 @@ class Beam(object):
         evalstr = evalstr.replace("cos", "sp.cos")
         evalstr = evalstr.replace("sin", "sp.sin")
         f = eval(evalstr)
-        m_ij = quad(f,0,l)[0]
+        m_ij = quad(f, 0, l)[0]
         return float(m_ij)
 
     def make_m_matrix(self, phi):
@@ -99,6 +100,7 @@ def make_phi_x(largest_order):
     phi = phi.subs(sym.solve([eq1, eq2, eq3, eq4], [c1, c2]))
     return phi
 
+
 def make_phi_hyper(n):
     """make phi n th expression
     n must be n<=4
@@ -106,13 +108,13 @@ def make_phi_hyper(n):
     :param n:
     :return: phi
     """
-    if(n>4):
-        print("error n is",n,"must be n<5")
+    if (n > 4):
+        print("error n is", n, "must be n<5")
     x = symbols('x')
     kl = kls[n]
-    k = kl/l
-    phi = sym.sinh(k*x)+sym.sinh(k*x)+\
-            (np.sin(kl)-np.sinh(kl))/(np.cosh(kl)-np.cos(kl))*(sym.cosh(k*x)+sym.cos(k*x))
+    k = kl / l
+    phi = sym.sinh(k * x) + sym.sin(k * x) + \
+          (sp.sin(kl) - sp.sinh(kl)) / (sp.cosh(kl) - sp.cos(kl)) * (sym.cosh(k * x) + sym.cos(k * x))
     return phi
 
 
@@ -124,10 +126,10 @@ def make_phi_array(n, is_x):
     :return:array of phi
     """
     phi_array = []
-    if(is_x):
+    if (is_x):
         x = symbols('x')
         phi_array.append(1)
-        phi_array.append(x/l)
+        phi_array.append(x / l)
         largest_order = n + 3
         for i in range(6, largest_order + 1):
             phi_array.append(make_phi_x(i))
@@ -168,7 +170,7 @@ def make_plot(eq_list, title):
     """
     fig, ax = plt.subplots()
     ax.set_xlim([0, l])
-    ax.set_ylim([-2, 2])
+    # ax.set_ylim([-2, 2])
     x_vals = np.linspace(0, l, 100)
     x = symbols('x')
     for i in range(len(eq_list)):
@@ -182,7 +184,7 @@ def make_plot(eq_list, title):
     # plt.savefig(name)
 
 
-def main(n, is_tapering,is_x):
+def main(n, is_tapering, is_x):
     """
 
     :param n: number of phi
@@ -190,11 +192,12 @@ def main(n, is_tapering,is_x):
     :param is_x: phi is expression of polynomial x
     :return:
     """
-    phi = make_phi_array(n,is_x)
+    phi = make_phi_array(n, is_x)
     c = solve_determinant(phi, Beam(is_tapering))
     w_list = [sum([c[j][i] * phi[i] for i in range(len(phi))]) for j in range(len(c))]
     title = str(n) + str(inp)
     make_plot(w_list, title)
+
 
 if __name__ == '__main__':
     print("Is the Beam tapering?")
@@ -215,8 +218,8 @@ if __name__ == '__main__':
             pass
         print('Error! Input again.')
 
-    if(exp):
+    if (exp):
         n = int(input("number of phi "))
-        main(n, inp,1)
+        main(n, inp, 1)
     else:
-        main(5,inp,0)
+        main(5, inp, 0)
