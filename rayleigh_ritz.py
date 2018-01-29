@@ -84,20 +84,41 @@ def make_phi_x(largest_order):
     eq3 = ddphi.subs([(x, l)])
     eq4 = dddphi.subs([(x, l)])
     phi = phi.subs(sym.solve([eq1, eq2, eq3, eq4], [c1, c2]))
-    # print(sym.latex(phi))
     return phi
 
+def make_phi_hyper(n):
+    """make phi n th expression
+    n must be n<=4
 
-def make_phi_array(largest_order):
-    """make array of phi.
-    :param largest_order: the number of largest order
+    :param n:
+    :return: phi
+    """
+    if(n>5):
+        print("error n is",n,"must be n<5")
+    x = symbols('x')
+    kl = kls[n]
+    k = kl/l
+    phi = np.sinh(k*x)+np.sinh(k*x)+\
+            (np.sin(kl)-np.sinh(kl))/(np.cosh(kl)-np.cos(kl))*(np.cosh(k*x)+np.cos(k*x))
+
+
+def make_phi_array(n, is_x):
+    """ make array of phi
+
+    :param n: the number of phi
+    :param is_x: phi is expression of polynomial x
     :return:array of phi
     """
-    x = symbols('x')
-    phi_array = [1, x / l]
-    for i in range(6, largest_order + 1):
-        phi_array.append(make_phi_x(i))
+    if(is_x):
+        x = symbols('x')
+        phi_array = [1, x / l]
+        largest_order = n + 3
+        for i in range(6, largest_order + 1):
+            phi_array.append(make_phi_x(i))
 
+    else:
+        for i in range(n):
+            phi_array.append(make_phi_hyper(i))
     return phi_array
 
 
@@ -145,19 +166,22 @@ def make_plot(eq_list, title):
     plt.savefig(name)
 
 
-def main(n, is_tapering):
+def main(n, is_tapering,is_x):
     """
 
     :param n: number of phi
     :param is_tapering: bool tapering or not
+    :param is_x: phi is expression of polynomial x
     :return:
     """
-    largest_order = n + 3
-    phi = make_phi_array(largest_order)
-    c = solve_determinant(phi, Beam(is_tapering))
-    w_list = [sum([c[j][i] * phi[i] for i in range(len(phi))]) for j in range(len(c))]
-    title = str(n) + str(inp)
-    make_plot(w_list, title)
+    if(is_x):
+        phi = make_phi_array(n,is_x)
+        c = solve_determinant(phi, Beam(is_tapering))
+        w_list = [sum([c[j][i] * phi[i] for i in range(len(phi))]) for j in range(len(c))]
+        title = str(n) + str(inp)
+        make_plot(w_list, title)
+    else:
+        phi = make_phi_array()
 
 
 if __name__ == '__main__':
@@ -181,4 +205,6 @@ if __name__ == '__main__':
 
     if(exp):
         n = int(input("number of phi "))
-        main(n, inp)
+        main(n, inp,1)
+    else:
+        main(5,inp,0)
