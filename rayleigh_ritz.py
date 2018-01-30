@@ -167,7 +167,7 @@ def make_plot(eq_list, title):
     ax.set_ylim([-2, 2])
     x_vals = np.linspace(0, l, 100)
     x = symbols('x')
-    for i in range(3)):
+    for i in range(3):
         lam_w_i = lambdify(x, eq_list[i], modules=['numpy'])
         y_vals = lam_w_i(x_vals)
         min_y = - y_vals[0]
