@@ -193,7 +193,7 @@ def main(n, is_tapering, is_x):
 
 def make_kl(n):
     """calculate coshx*cosx=1 (radian)
-    usin　periodicity　of cosx
+    using　periodicity　of cosx
 
     :param n:nth answer
     :return:
