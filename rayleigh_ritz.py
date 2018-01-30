@@ -7,7 +7,7 @@ This module numerically analyze free-free beam vibration
 using Rayleigh-Ritz method.
 
 """
-
+import seaborn as sns
 import sympy as sym
 import scipy.linalg
 # from sympy.matrices import Matrix
@@ -24,7 +24,6 @@ rho = 2.7 * (10 ** (-3)) * ((10 ** 2) ** 3)  # kg/m^3
 h = 1 * (10 ** (-3))  # m
 E = 70 * (10 ** 9)  # Pa
 non_dimensionize = 1 / l ** 2 * np.sqrt(E * h ** 3 / 12 * (2) ** 3 / (rho * h * 2))
-kls = [4.730, 7.8532, 10.9956, 14.1371, 17.2787]
 
 
 class Beam(object):
@@ -45,11 +44,7 @@ class Beam(object):
         dphi_j = sym.diff(phi_j, x)
         ddphi_j = sym.diff(dphi_j, x)
         function = self.EI(x) * ddphi_i * ddphi_j
-        expr = sym.expand(function)
-        evalstr = "lambda x:" + str(expr)
-        evalstr = evalstr.replace("cos", "sp.cos")
-        evalstr = evalstr.replace("sin", "sp.sin")
-        f = eval(evalstr)
+        f = lambdify(x, function, modules=['numpy'])
         k_ij = quad(f, 0, l)[0]
         return float(k_ij)
 
@@ -66,11 +61,7 @@ class Beam(object):
     def calc_m(self, phi_i, phi_j):
         x = symbols('x')
         function = self.mu(x) * phi_i * phi_j
-        expr = sym.expand(function)
-        evalstr = "lambda x:" + str(expr)
-        evalstr = evalstr.replace("cos", "sp.cos")
-        evalstr = evalstr.replace("sin", "sp.sin")
-        f = eval(evalstr)
+        f= lambdify(x, function, modules=['numpy'])
         m_ij = quad(f, 0, l)[0]
         return float(m_ij)
 
@@ -113,10 +104,8 @@ def make_phi_hyper(n):
     :param n:
     :return: phi
     """
-    if (n > 4):
-        print("error n is", n, "must be n<5")
     x = symbols('x')
-    kl = kls[n]
+    kl = make_kl(n+1)
     k = kl / l
     phi = sym.sinh(k * x) + sym.sin(k * x) + \
           (sp.sin(kl) - sp.sinh(kl)) / (sp.cosh(kl) - sp.cos(kl)) * (sym.cosh(k * x) + sym.cos(k * x))
@@ -204,6 +193,19 @@ def main(n, is_tapering, is_x):
     make_plot(w_list, title)
 
 
+def make_kl(n):
+    """calculate coshx*cosx=1 (radian)
+    usin　periodicity　of cosx
+
+    :param n:nth answer
+    :return:
+    """
+    product = [ abs(sp.cosh(x)*sp.cos(x)-1) for x in np.arange(n*np.pi, (n+1/2)*np.pi,0.001)]
+    index = product.index(min(product))
+    kl = n*np.pi+0.001*index
+    return kl
+
+
 if __name__ == '__main__':
     print("Is the Beam tapering?")
     dic = {'y': True, 'yes': True, 'n': False, 'no': False}
@@ -227,4 +229,5 @@ if __name__ == '__main__':
         n = int(input("number of phi "))
         main(n, inp, 1)
     else:
-        main(5, inp, 0)
+        n = int(input("number of phi "))
+        main(n, inp, 0)
