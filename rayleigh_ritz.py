@@ -7,10 +7,8 @@ This module numerically analyze free-free beam vibration
 using Rayleigh-Ritz method.
 
 """
-import seaborn as sns
 import sympy as sym
 import scipy.linalg
-# from sympy.matrices import Matrix
 from sympy import lambdify, symbols
 import numpy as np
 import itertools
