@@ -164,18 +164,18 @@ def make_plot(eq_list, title):
     """
     fig, ax = plt.subplots()
     ax.set_xlim([0, l])
-    ax.set_ylim([-1.5, 1.5])
+    ax.set_ylim([-2, 2])
     x_vals = np.linspace(0, l, 100)
     x = symbols('x')
-    for i in range(len(eq_list)):
+    for i in range(3)):
         lam_w_i = lambdify(x, eq_list[i], modules=['numpy'])
         y_vals = lam_w_i(x_vals)
         min_y = - y_vals[0]
         ax.plot(x_vals, y_vals / min_y, label='mode:' + str(i + 1))
     ax.legend()
     name = "fig/" + title + ".pgf"
-    plt.show()
-    # plt.savefig(name)
+    # plt.show()
+    plt.savefig(name)
 
 
 def main(n, is_tapering, is_x):
